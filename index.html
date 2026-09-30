@@ -156,55 +156,24 @@
             .spinner { width: 20px; height: 20px; border: 3px solid #e3e0ff; border-top-color: var(--primaria); border-radius: 50%; animation: girar .8s linear infinite; }
             @keyframes girar { to { transform: rotate(360deg); } }
 
-            /* Otimizações Responsivas para Dispositivos Móveis */
             @media (max-width: 760px) {
-                body { padding: 12px 8px; }
-                .layout { grid-template-columns: 1fr; gap: 14px; }
-                
-                .menu-dias {
-                    position: static;
-                    padding: 14px 16px;
-                    border-radius: 20px;
-                }
-                .menu-dias h3 { margin-bottom: 10px; font-size: 0.85rem; }
-                
-                /* Carrossel horizontal deslizável de dias */
-                .lista-dias {
-                    display: flex;
-                    grid-template-columns: none;
-                    gap: 8px;
-                    overflow-x: auto;
-                    padding-bottom: 6px;
-                    -webkit-overflow-scrolling: touch;
-                    scroll-snap-type: x mandatory;
-                }
-                
-                .dia-menu {
-                    flex: 0 0 auto;
-                    width: 105px;
-                    padding: 8px 10px;
-                    text-align: center;
-                    border-radius: 12px;
-                    font-size: 0.82rem;
-                    scroll-snap-align: start;
-                }
+                body { padding: 14px 10px; }
+                .layout { grid-template-columns: 1fr; gap: 16px; }
+                .menu-dias { position: static; padding: 17px; }
+                .lista-dias { grid-template-columns: repeat(2, minmax(0, 1fr)); }
                 .dia-menu:hover { transform: none; }
-                .dia-menu small { font-size: 0.7rem; margin-top: 2px; }
-
-                .container { padding: 18px 16px 20px; border-radius: 20px; }
-                .cabecalho { margin: -18px -16px 18px; padding: 22px 18px; }
-                .cabecalho h2 { font-size: 1.4rem; }
+                .container { padding: 20px 18px 24px; border-radius: 24px; }
+                .cabecalho { margin: -20px -18px 22px; padding: 26px 22px 23px; }
             }
-
             @media (max-width: 430px) {
-                .data-box, .placar { align-items: stretch; flex-direction: column; gap: 8px; }
+                .data-box, .placar { align-items: stretch; flex-direction: column; }
                 .data-box input { width: 100%; }
                 .placar { text-align: center; }
-                .item-tarefa { align-items: flex-start; flex-direction: column; gap: 8px; }
-                .navegacao-semana button { padding: 8px 4px; }
+                .item-tarefa { align-items: flex-start; flex-direction: column; gap: 9px; }
+                .navegacao-semana button { padding: 9px 4px; }
             }
         </style>
-    </head>
+        </head>
     <body>
 
         <div class="layout">
@@ -218,23 +187,23 @@
             </aside>
 
             <main class="container">
-                <header class="cabecalho">
-                    <h2>Olá! Vamos começar? 🚀</h2>
-                    <p>Organize seu dia, cumpra missões e conquiste seus pontos.</p>
-                </header>
+            <header class="cabecalho">
+                <h2>Olá! Vamos começar? 🚀</h2>
+                <p>Organize seu dia, cumpra missões e conquiste seus pontos.</p>
+            </header>
 
-                <div class="data-box">
-                    <label for="campo-data">Data: </label>
-                    <input type="text" id="campo-data" inputmode="numeric" maxlength="10" placeholder="dd/mm/aaaa" onchange="carregarTarefas()">
-                </div>
+            <div class="data-box">
+                <label for="campo-data">Data: </label>
+                <input type="text" id="campo-data" inputmode="numeric" maxlength="10" placeholder="dd/mm/aaaa" onchange="carregarTarefas()">
+            </div>
 
-                <div class="placar">
-                    Pontos do Dia: <span id="total-pontos">0</span> ⭐
-                </div>
+            <div class="placar">
+                Pontos do Dia: <span id="total-pontos">0</span> ⭐
+            </div>
 
-                <div id="prova-publicada"></div>
+            <div id="prova-publicada"></div>
 
-                <div id="lista-tarefas"><div class="carregando"><span class="spinner"></span>Buscando tarefas...</div></div>
+            <div id="lista-tarefas"><div class="carregando"><span class="spinner"></span>Buscando tarefas...</div></div>
             </main>
         </div>
 
@@ -322,6 +291,7 @@
                     const resposta = await fetch(`${SCRIPT_URL}?acao=LISTAR_PROVA_ATIVA&data=${encodeURIComponent(dataApi)}`);
                     const resultado = await resposta.json();
                     
+                    // Tratamento para suportar tanto retorno de uma única prova quanto lista de provas
                     let listaProvas = [];
                     if (resultado && resultado.provas && Array.isArray(resultado.provas)) {
                         listaProvas = resultado.provas;
@@ -436,6 +406,8 @@
                 container.innerHTML = '<div class="carregando"><span class="spinner"></span>Buscando tarefas...</div>';
 
                 try {
+                    // Mesma consulta usada pelo "Criar Tarefas":
+                    // busca a aba Tarefas pela data em formato brasileiro.
                     const url = `${SCRIPT_URL}?acao=BUSCAR_LINHAS&aba=Tarefas&coluna=Data&valor=${encodeURIComponent(dataBr)}&planilhaAlvo=tarefas`;
                     const resposta = await fetch(url);
                     const resultado = await resposta.json();
@@ -508,6 +480,8 @@
                 }
 
                 try {
+                    // O Criar Tarefas trabalha com linhas identificadas por _numeroLinha.
+                    // Usamos o mesmo padrão para atualizar somente esta tarefa.
                     const resposta = await fetch(SCRIPT_URL, {
                         method: "POST",
                         headers: { "Content-Type": "text/plain;charset=utf-8" },
