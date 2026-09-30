@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="theme-color" content="#4f46e5">
+        <title>Minha Agenda</title>
+        <style>
+            :root {
+                --fundo: #f7f8fc;
+                --superficie: rgba(255, 255, 255, 0.96);
+                --texto: #172033;
+                --texto-suave: #718096;
+                --primaria: #6558e8;
+                --primaria-escura: #4f46c9;
+                --primaria-clara: #f0efff;
+                --borda: #e8eaf2;
+                --sucesso: #16a36a;
+                --sombra: 0 24px 70px rgba(44, 46, 90, .12);
+            }
+
+            * { box-sizing: border-box; }
+            body {
+                min-height: 100vh;
+                margin: 0;
+                padding: 40px 20px;
+                display: flex;
+                justify-content: center;
+                color: var(--texto);
+                font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                background:
+                    radial-gradient(circle at 10% 5%, rgba(129, 116, 255, .18) 0, transparent 30%),
+                    radial-gradient(circle at 90% 15%, rgba(75, 190, 226, .15) 0, transparent 26%),
+                    var(--fundo);
+            }
+
+            button, input { font: inherit; }
+            button { transition: transform .2s ease, background .2s ease, box-shadow .2s ease, border-color .2s ease; }
+            button:focus-visible, input:focus-visible { outline: 3px solid rgba(101, 88, 232, .24); outline-offset: 3px; }
+
+            .layout {
+                display: grid;
+                grid-template-columns: 250px minmax(0, 650px);
+                gap: 28px;
+                width: 100%;
+                max-width: 950px;
+                align-items: start;
+            }
+            .menu-dias, .container {
+                background: var(--superficie);
+                border: 1px solid rgba(255, 255, 255, .9);
+                border-radius: 28px;
+                box-shadow: var(--sombra);
+                backdrop-filter: blur(18px);
+            }
+            .menu-dias { position: sticky; top: 28px; padding: 22px; }
+            .menu-dias h3 { margin: 0 0 18px; color: #41445d; font-size: .92rem; letter-spacing: .03em; }
+            .navegacao-semana { display: flex; gap: 9px; margin-bottom: 16px; }
+            .navegacao-semana button {
+                flex: 1;
+                padding: 10px;
+                border: 1px solid var(--borda);
+                border-radius: 12px;
+                color: #646b7e;
+                background: #fafaff;
+                font-weight: 800;
+                cursor: pointer;
+            }
+            .navegacao-semana button:hover { color: white; border-color: var(--primaria); background: var(--primaria); transform: translateY(-2px); box-shadow: 0 8px 18px rgba(101, 88, 232, .25); }
+            .lista-dias { display: grid; gap: 7px; }
+            .dia-menu {
+                width: 100%;
+                padding: 12px 14px;
+                border: 1px solid transparent;
+                border-radius: 14px;
+                color: #5f6678;
+                background: transparent;
+                text-align: left;
+                cursor: pointer;
+            }
+            .dia-menu:hover { transform: translateX(4px); color: var(--primaria-escura); background: #f7f6ff; }
+            .dia-menu.ativo {
+                color: white;
+                background: linear-gradient(135deg, #7669f1, #5547d8);
+                font-weight: 750;
+                box-shadow: 0 12px 24px rgba(85, 71, 216, .26);
+            }
+            .dia-menu small { display: block; margin-top: 3px; color: var(--texto-suave); font-size: .75rem; font-weight: 550; }
+            .dia-menu.ativo small { color: rgba(255, 255, 255, .78); }
+
+            .container { width: 100%; padding: 34px; }
+            .cabecalho { position: relative; margin: -34px -34px 26px; padding: 32px 34px 27px; overflow: hidden; background: linear-gradient(120deg, #6254e6, #8174f6); color: white; }
+            .cabecalho::after { content: "✦"; position: absolute; right: 30px; top: -20px; color: rgba(255,255,255,.12); font-size: 130px; transform: rotate(12deg); }
+            .cabecalho h2 { position: relative; margin: 0 0 7px; font-size: clamp(1.7rem, 4vw, 2.25rem); letter-spacing: -.045em; }
+            .cabecalho p { position: relative; margin: 0; color: rgba(255,255,255,.78); }
+            .data-box {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 14px;
+                margin-bottom: 14px;
+                padding: 15px 18px;
+                border: 1px solid var(--borda);
+                border-radius: 17px;
+                background: #fbfbfe;
+            }
+            .data-box label { color: #50576a; font-size: .9rem; font-weight: 750; }
+            .data-box input { min-width: 150px; padding: 11px 14px; border: 1px solid #dfe2ec; border-radius: 11px; color: var(--texto); background: white; text-align: center; font-weight: 650; }
+            .placar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 22px;
+                padding: 15px 19px;
+                border: 1px solid #f6d78b;
+                border-radius: 17px;
+                color: #78520c;
+                background: linear-gradient(120deg, #fff9e9, #fff1bd);
+                font-weight: 750;
+                box-shadow: 0 10px 24px rgba(180, 125, 17, .10);
+            }
+            #total-pontos { padding: 4px 12px; border-radius: 10px; color: white; background: #e7a817; font-size: 1.15rem; }
+
+            .prova-publicada { margin-bottom: 16px; overflow: hidden; border: 1px solid #dedbff; border-radius: 20px; background: #fcfcff; box-shadow: 0 10px 28px rgba(87, 73, 194, .08); }
+            .prova-cabecalho { padding: 17px 20px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #f0efff, #e8e5ff); cursor: pointer; user-select: none; }
+            .prova-cabecalho h3 { margin: 0; color: #4439a2; font-size: 1.02rem; }
+            .icone-expandir { color: #6c5ee7; transition: transform .25s ease; }
+            .prova-conteudo { display: none; padding: 20px; border-top: 1px solid #dedbff; }
+            .prova-publicada.aberta .prova-conteudo { display: block; }
+            .prova-publicada.aberta .icone-expandir { transform: rotate(180deg); }
+            .questao-prova { padding: 16px 0; border-top: 1px solid #ecebf8; }
+            .questao-prova:first-of-type { border-top: 0; }
+            .questao-prova strong { display: block; margin-bottom: 11px; line-height: 1.5; }
+            .alternativas-prova { display: grid; gap: 8px; }
+            .alternativas-prova label { display: block; padding: 11px 13px; border: 1px solid transparent; border-radius: 12px; cursor: pointer; transition: background .18s ease, transform .18s ease; }
+            .alternativas-prova label:hover { background: var(--primaria-clara); transform: translateX(3px); }
+            .alternativas-prova label.resposta-certa { border-color: #86efac; color: #166534; background: #dcfce7; }
+            .alternativas-prova label.resposta-errada { border-color: #fca5a5; color: #b91c1c; background: #fee2e2; }
+            .botao-enviar-prova { width: 100%; margin-top: 17px; padding: 13px 18px; border: 0; border-radius: 13px; color: white; background: var(--sucesso); font-weight: 800; cursor: pointer; }
+            .botao-enviar-prova:hover { transform: translateY(-2px); background: #128a59; box-shadow: 0 10px 20px rgba(22, 163, 106, .25); }
+            .botao-enviar-prova:disabled { opacity: .65; cursor: default; transform: none; box-shadow: none; }
+            #resultado-prova { font-weight: 750; text-align: center; }
+
+            #lista-tarefas { margin-top: 24px; overflow: hidden; border: 1px solid var(--borda); border-radius: 20px; background: white; box-shadow: 0 10px 28px rgba(44, 46, 90, .06); }
+            .item-tarefa { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 19px; border-bottom: 1px solid var(--borda); }
+            .item-tarefa:last-child { border-bottom: 0; }
+            .item-tarefa:hover { background: #fafaff; }
+            .item-tarefa label { cursor: pointer; line-height: 1.5; }
+            .item-tarefa input, .alternativas-prova input { accent-color: var(--primaria); }
+            .tarefa-feita { color: #7c8799; background: #f7f8fa; }
+            .tarefa-feita label { text-decoration: line-through; }
+            .badge-conferido, .badge-feita { display: inline-block; padding: 5px 9px; border-radius: 999px; color: white; font-size: .69rem; font-weight: 750; white-space: nowrap; }
+            .badge-conferido { background: #2385c6; }
+            .badge-feita { margin-right: 5px; background: var(--sucesso); }
+            .carregando, #lista-tarefas > p { display: flex; align-items: center; justify-content: center; gap: 9px; padding: 30px; color: var(--texto-suave); }
+            .spinner { width: 20px; height: 20px; border: 3px solid #e3e0ff; border-top-color: var(--primaria); border-radius: 50%; animation: girar .8s linear infinite; }
+            @keyframes girar { to { transform: rotate(360deg); } }
+
+            @media (max-width: 760px) {
+                body { padding: 14px 10px; }
+                .layout { grid-template-columns: 1fr; gap: 16px; }
+                .menu-dias { position: static; padding: 17px; }
+                .lista-dias { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+                .dia-menu:hover { transform: none; }
+                .container { padding: 20px 18px 24px; border-radius: 24px; }
+                .cabecalho { margin: -20px -18px 22px; padding: 26px 22px 23px; }
+            }
+            @media (max-width: 430px) {
+                .data-box, .placar { align-items: stretch; flex-direction: column; }
+                .data-box input { width: 100%; }
+                .placar { text-align: center; }
+                .item-tarefa { align-items: flex-start; flex-direction: column; gap: 9px; }
+                .navegacao-semana button { padding: 9px 4px; }
+            }
+        </style>
+        </head>
+    <body>
+
+        <div class="layout">
+            <aside class="menu-dias" aria-label="Dias da semana">
+                <h3>Dias da semana</h3>
+                <div class="navegacao-semana">
+                    <button type="button" id="semana-anterior" aria-label="Semana anterior">&lt;</button>
+                    <button type="button" id="semana-proxima" aria-label="Próxima semana">&gt;</button>
+                </div>
+                <nav class="lista-dias" id="lista-dias"></nav>
+            </aside>
+
+            <main class="container">
+            <header class="cabecalho">
+                <h2>Olá! Vamos começar? 🚀</h2>
+                <p>Organize seu dia, cumpra missões e conquiste seus pontos.</p>
+            </header>
+
+            <div class="data-box">
+                <label for="campo-data">Data: </label>
+                <input type="text" id="campo-data" inputmode="numeric" maxlength="10" placeholder="dd/mm/aaaa" onchange="carregarTarefas()">
+            </div>
+
+            <div class="placar">
+                Pontos do Dia: <span id="total-pontos">0</span> ⭐
+            </div>
+
+            <div id="prova-publicada"></div>
+
+            <div id="lista-tarefas"><div class="carregando"><span class="spinner"></span>Buscando tarefas...</div></div>
+            </main>
+        </div>
+
+        <script>
+            const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6WtwETdMWIFSMWgNfZn-7MHCn0r35oReAcJzW4f2ELjF-ObKwM93d-nVO6xBkOIIj/exec";
+            let inicioSemanaAtual;
+            let provasDoDia = {};
+
+            // Define a data de hoje por padrão ao abrir
+            document.getElementById('campo-data').value = dataHojeBrasileira();
+            criarMenuDias();
+            document.getElementById('semana-anterior').addEventListener('click', () => mudarSemana(-7));
+            document.getElementById('semana-proxima').addEventListener('click', () => mudarSemana(7));
+
+            function dataHojeBrasileira() {
+                const hoje = new Date();
+                return `${String(hoje.getDate()).padStart(2, '0')}/${String(hoje.getMonth() + 1).padStart(2, '0')}/${hoje.getFullYear()}`;
+            }
+
+            function converterDataParaApi(dataBrasileira) {
+                const partes = dataBrasileira.trim().split('/');
+                if (partes.length !== 3 || partes[0].length !== 2 || partes[1].length !== 2 || partes[2].length !== 4) return '';
+
+                const dia = Number(partes[0]);
+                const mes = Number(partes[1]);
+                const ano = Number(partes[2]);
+                const data = new Date(ano, mes - 1, dia);
+                if (data.getFullYear() !== ano || data.getMonth() !== mes - 1 || data.getDate() !== dia) return '';
+
+                return `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+            }
+
+            function formatarDataBrasileira(dataApi) {
+                const partes = dataApi.split('-');
+                return `${partes[2]}/${partes[1]}/${partes[0]}`;
+            }
+
+            function criarMenuDias() {
+                const nomesDias = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+                if (!inicioSemanaAtual) {
+                    const hoje = new Date();
+                    inicioSemanaAtual = new Date(hoje);
+                    const distanciaSegunda = (hoje.getDay() + 6) % 7;
+                    inicioSemanaAtual.setDate(hoje.getDate() - distanciaSegunda);
+                }
+                const lista = document.getElementById('lista-dias');
+                lista.innerHTML = '';
+
+                for (let indice = 0; indice < 7; indice++) {
+                    const data = new Date(inicioSemanaAtual);
+                    data.setDate(inicioSemanaAtual.getDate() + indice);
+                    const dataApi = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`;
+                    const botao = document.createElement('button');
+                    botao.type = 'button';
+                    botao.className = 'dia-menu';
+                    botao.dataset.data = dataApi;
+                    botao.innerHTML = `${nomesDias[data.getDay()]}<small>${formatarDataBrasileira(dataApi)}</small>`;
+                    botao.addEventListener('click', () => selecionarDia(dataApi));
+                    lista.appendChild(botao);
+                }
+
+                selecionarDia(converterDataParaApi(document.getElementById('campo-data').value));
+            }
+
+            function mudarSemana(dias) {
+                inicioSemanaAtual.setDate(inicioSemanaAtual.getDate() + dias);
+                document.getElementById('campo-data').value = formatarDataBrasileira(`${inicioSemanaAtual.getFullYear()}-${String(inicioSemanaAtual.getMonth() + 1).padStart(2, '0')}-${String(inicioSemanaAtual.getDate()).padStart(2, '0')}`);
+                criarMenuDias();
+            }
+
+            function selecionarDia(dataApi) {
+                if (!dataApi) return;
+                document.getElementById('campo-data').value = formatarDataBrasileira(dataApi);
+                document.querySelectorAll('.dia-menu').forEach(botao => {
+                    botao.classList.toggle('ativo', botao.dataset.data === dataApi);
+                });
+                carregarTarefas();
+                carregarProvaAtiva(dataApi);
+            }
+
+            async function carregarProvaAtiva(dataApi) {
+                const container = document.getElementById('prova-publicada');
+                provasDoDia = {};
+                try {
+                    const resposta = await fetch(`${SCRIPT_URL}?acao=LISTAR_PROVA_ATIVA&data=${encodeURIComponent(dataApi)}`);
+                    const resultado = await resposta.json();
+                    
+                    // Tratamento para suportar tanto retorno de uma única prova quanto lista de provas
+                    let listaProvas = [];
+                    if (resultado && resultado.provas && Array.isArray(resultado.provas)) {
+                        listaProvas = resultado.provas;
+                    } else if (resultado && resultado.prova && Array.isArray(resultado.questoes)) {
+                        listaProvas = [{ prova: resultado.prova, questoes: resultado.questoes }];
+                    }
+
+                    if (listaProvas.length === 0) {
+                        container.innerHTML = '';
+                        return;
+                    }
+
+                    let html = '';
+                    listaProvas.forEach((item, index) => {
+                        const provaId = item.prova.id || `prova-${index}`;
+                        provasDoDia[provaId] = item.questoes;
+
+                        html += `
+                            <section class="prova-publicada" id="card-${provaId}">
+                                <div class="prova-cabecalho" onclick="alternarProva('${provaId}')">
+                                    <h3>📝 ${escaparHtml(item.prova.titulo)}</h3>
+                                    <span class="icone-expandir">▼</span>
+                                </div>
+                                <div class="prova-conteudo">
+                                    ${item.questoes.map(q => renderizarQuestao(q, provaId)).join('')}
+                                    <button type="button" class="botao-enviar-prova" id="btn-enviar-${provaId}" onclick="corrigirProva('${provaId}')">Confirmar respostas</button>
+                                    <p id="resultado-prova-${provaId}"></p>
+                                </div>
+                            </section>
+                        `;
+                    });
+
+                    container.innerHTML = html;
+                } catch (erro) {
+                    provasDoDia = {};
+                    container.innerHTML = '';
+                }
+            }
+
+            function alternarProva(provaId) {
+                const card = document.getElementById(`card-${provaId}`);
+                if (card) {
+                    card.classList.toggle('aberta');
+                }
+            }
+
+            function renderizarQuestao(questao, provaId) {
+                return `<div class="questao-prova">
+                    <strong>${questao.numero}. ${escaparHtml(questao.enunciado)}</strong>
+                    <div class="alternativas-prova">
+                        ${Object.entries(questao.alternativas).map(([letra, texto]) => `
+                            <label>
+                                <input type="radio" name="questao-${provaId}-${escaparHtml(questao.id)}" value="${letra}"> ${letra})${escaparHtml(texto)}
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>`;
+            }
+
+            function corrigirProva(provaId) {
+                if (!window.confirm('Confirmar suas respostas? Depois da confirmação, elas não poderão ser alteradas.')) return;
+
+                const questoes = provasDoDia[provaId] || [];
+                let acertos = 0;
+                let naoRespondidas = 0;
+
+                questoes.forEach(questao => {
+                    const resposta = document.querySelector(`input[name="questao-${provaId}-${questao.id}"]:checked`);
+                    if (!resposta) {
+                        naoRespondidas++;
+                        return;
+                    }
+                    const linhaResposta = resposta.closest('label');
+                    if (resposta.value === questao.gabarito) {
+                        acertos++;
+                        linhaResposta.classList.add('resposta-certa');
+                    } else {
+                        linhaResposta.classList.add('resposta-errada');
+                    }
+                });
+
+                const total = questoes.length;
+                const percentual = total ? Math.round((acertos / total) * 100) : 0;
+                
+                const card = document.getElementById(`card-${provaId}`);
+                card.querySelectorAll('.alternativas-prova input').forEach(caixa => caixa.disabled = true);
+                
+                const botaoConfirmar = document.getElementById(`btn-enviar-${provaId}`);
+                if (botaoConfirmar) {
+                    botaoConfirmar.disabled = true;
+                    botaoConfirmar.textContent = 'Respostas confirmadas';
+                }
+
+                document.getElementById(`resultado-prova-${provaId}`).textContent = `Resultado: ${acertos} de ${total} acertos (${percentual}%). Não respondidas: ${naoRespondidas}.`;
+            }
+
+            function escaparHtml(valor) {
+                return String(valor).replace(/[&<>'"]/g, caractere => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[caractere]);
+            }
+
+            async function carregarTarefas() {
+                const dataBr = document.getElementById('campo-data').value.trim();
+                const dataApi = converterDataParaApi(dataBr);
+                const container = document.getElementById('lista-tarefas');
+
+                if (!dataApi) {
+                    container.innerHTML = "<p style='text-align:center;'>Digite uma data válida no formato dd/mm/aaaa.</p>";
+                    document.getElementById('total-pontos').innerText = 0;
+                    return;
+                }
+
+                container.innerHTML = '<div class="carregando"><span class="spinner"></span>Buscando tarefas...</div>';
+
+                try {
+                    // Mesma consulta usada pelo "Criar Tarefas":
+                    // busca a aba Tarefas pela data em formato brasileiro.
+                    const url = `${SCRIPT_URL}?acao=BUSCAR_LINHAS&aba=Tarefas&coluna=Data&valor=${encodeURIComponent(dataBr)}&planilhaAlvo=tarefas`;
+                    const resposta = await fetch(url);
+                    const resultado = await resposta.json();
+
+                    if (!resultado || !resultado.sucesso || !Array.isArray(resultado.dados)) {
+                        throw new Error(resultado?.mensagem || 'Resposta inválida do servidor.');
+                    }
+
+                    const tarefas = resultado.dados;
+
+                    if (tarefas.length === 0) {
+                        container.innerHTML = "<p style='text-align:center;'>Nenhuma tarefa para este dia!</p>";
+                        document.getElementById('total-pontos').innerText = 0;
+                        return;
+                    }
+
+                    let html = "";
+                    let totalPontos = 0;
+
+                    tarefas.forEach(t => {
+                        const feita = String(t.Status || t.status || '').toLowerCase() === 'concluído'
+                            || String(t.Status || t.status || '').toLowerCase() === 'concluido';
+                        const checked = feita ? "checked" : "";
+                        const bloqueado = checked ? "disabled" : "";
+                        const classeStatus = checked ? " tarefa-feita" : "";
+                        const pontos = Number(t.Pontos ?? t.pontos ?? 0) || 0;
+                        const nomeTarefa = t.Tarefa || t.tarefa || '';
+                        const numeroLinha = Number(t._numeroLinha) || 0;
+                        const permiteRep = t.PermiteRepeticao === 'Sim' || t.PermiteRepeticao === true;
+                        const unidade = t.Unidade || 'Vezes';
+                        const maxExecucoes = Number(t.MaxExecucoes) || 10;
+                        const executados = Number(t.Executados) || 0;
+
+                        if (feita) totalPontos += pontos;
+
+                        const badge = t.Conferido === 'Sim' || t.conferido === 'Sim'
+                            ? `<span class="badge-conferido">✓ Conferido pelo Pai</span>` : "";
+                        const status = feita ? `<span class="badge-feita">Feita</span>` : "";
+                        const detalheRep = permiteRep
+                            ? `<small style="display:block;color:#718096;">${executados}/${maxExecucoes} ${escaparHtml(unidade)}</small>`
+                            : '';
+
+                        html += `
+                        <div class="item-tarefa${classeStatus}">
+                            <label>
+                                <input type="checkbox" ${checked} ${bloqueado}
+                                    onchange="confirmarConclusao(this, '${escaparJs(nomeTarefa)}', ${numeroLinha})">
+                                ${escaparHtml(nomeTarefa)} (+${pontos} pts)
+                                ${detalheRep}
+                            </label>
+                            <span>${status}${badge}</span>
+                        </div>
+                        `;
+                    });
+
+                    container.innerHTML = html;
+                    document.getElementById('total-pontos').innerText = totalPontos;
+                } catch (e) {
+                    console.error('Erro ao carregar tarefas:', e);
+                    container.innerHTML = `<p style="text-align:center;color:#dc2626;">Erro ao carregar tarefas: ${escaparHtml(e.message || 'falha de comunicação')}</p>`;
+                    document.getElementById('total-pontos').innerText = 0;
+                }
+            }
+
+            async function marcarConcluido(nomeTarefa, numeroLinha) {
+                if (!numeroLinha) {
+                    alert('Não foi possível identificar a linha da tarefa na planilha.');
+                    carregarTarefas();
+                    return;
+                }
+
+                try {
+                    // O Criar Tarefas trabalha com linhas identificadas por _numeroLinha.
+                    // Usamos o mesmo padrão para atualizar somente esta tarefa.
+                    const resposta = await fetch(SCRIPT_URL, {
+                        method: "POST",
+                        headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        body: JSON.stringify({
+                            acao: "EDITAR_LINHA",
+                            planilhaAlvo: "tarefas",
+                            aba: "Tarefas",
+                            numeroLinha: numeroLinha,
+                            novosValores: {
+                                "Status": "Concluído"
+                            }
+                        })
+                    });
+
+                    const resultado = await resposta.json();
+                    if (!resultado.sucesso) {
+                        throw new Error(resultado.mensagem || 'O servidor não conseguiu concluir a tarefa.');
+                    }
+
+                    setTimeout(carregarTarefas, 500);
+                } catch (erro) {
+                    alert(`Não foi possível concluir a tarefa "${nomeTarefa}": ${erro.message}`);
+                    carregarTarefas();
+                }
+            }
+
+            function confirmarConclusao(caixa, nomeTarefa, numeroLinha) {
+                if (caixa.checked && !window.confirm(`Deseja marcar a tarefa "${nomeTarefa}" como concluída?`)) {
+                    caixa.checked = false;
+                    return;
+                }
+
+                if (caixa.checked) marcarConcluido(nomeTarefa, numeroLinha);
+            }
+
+            function escaparJs(valor) {
+                return String(valor)
+                    .replace(/\\/g, '\\\\')
+                    .replace(/'/g, "\\'")
+                    .replace(/\r/g, '\\r')
+                    .replace(/\n/g, '\\n');
+            }
+        </script>
+
+    </body>
+</html>
